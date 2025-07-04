@@ -1,35 +1,48 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./chatwindow.css";
+import socket from "../socket";
 
-import socket from "../socket"; 
+import { useDispatch, useSelector } from "react-redux";
+import { addMessage } from "../store/chatSlice";
 
 export default function ChatWindow({ visitor }) {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
+  const dispatch = useDispatch();
   const messageEndRef = useRef(null);
-  const [visitors, setVisitors] = useState([]);
+  const [input, setInput] = useState("");
 
-  
+  const visitorId = visitor?.id;
+  const messages = useSelector(
+    (state) => state.chats.messagesByVisitor[visitorId] || []
+  );
+
+  // ✅ Receive visitor messages
   useEffect(() => {
-  socket.on("visitor_message", (msg) => {
-    setMessages((prev) => [...prev, msg]);
-  });
-
-  return () => {
-    socket.off("visitor_message");
+    const handleVisitorMessage = (data) => {
+      dispatch(addMessage({ visitorId: data.visitorId, message: data }));
     };
-  }, []);
-  
+
+    socket.on("visitor message", handleVisitorMessage);
+    return () => socket.off("visitor message", handleVisitorMessage);
+  }, [dispatch]);
+
+  // ✅ Auto-scroll to bottom
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  
-
+  // ✅ Send agent message
   const handleSend = () => {
-    const msg = { text: input, from: "agent", time: new Date().toLocaleTimeString() };
+    if (!input.trim() || !visitorId) return;
+
+    const msg = {
+      text: input,
+      from: "agent",
+      time: new Date().toLocaleTimeString(),
+      visitorId,
+    };
+
     socket.emit("agent_message", msg);
-    setMessages((prev) => [...prev, msg]);
+    dispatch(addMessage({ visitorId, message: msg }));
     setInput("");
   };
 
@@ -37,20 +50,19 @@ export default function ChatWindow({ visitor }) {
     if (e.key === "Enter") handleSend();
   };
 
-  if (!visitor) return <div className="chat-window empty">Select a visitor</div>;
+  if (!visitor)
+    return <div className="chat-window empty">Select a visitor</div>;
 
   return (
     <div className="chat-window">
       <div className="chat-header">{visitor.name}</div>
       <div className="chat-messages">
-        {messages.map((msg, i) => {
-  return (
-    <div key={i} className={`chat-bubble ${msg.from}`}>
-      {msg.text}
-      <span className="time">{msg.time}</span>
-    </div>
-  );
-})}
+        {messages.map((msg, i) => (
+          <div key={i} className={`chat-bubble ${msg.from}`}>
+            {msg.text}
+            <span className="time">{msg.time}</span>
+          </div>
+        ))}
         <div ref={messageEndRef}></div>
       </div>
       <div className="chat-input">
@@ -66,11 +78,3 @@ export default function ChatWindow({ visitor }) {
     </div>
   );
 }
-
-// Utility to get time 
-function getTimeNow() {
-  const now = new Date();
-  return `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`;
-}
-
-

@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./sidebar.css";
-import socket from "../socket"; 
+import socket from "../socket";
+
+import { useDispatch, useSelector } from "react-redux";
+import { addVisitor, selectVisitor } from "../store/visitorslice";
 
 const team = [
   { id: 1, name: "Team Alpha" },
@@ -9,26 +12,25 @@ const team = [
 
 export default function Sidebar({ onSelectVisitor }) {
   const [activeTab, setActiveTab] = useState("visitors");
-  const [selectedVisitor, setSelectedVisitor] = useState(null);
-  const [visitors, setVisitors] = useState([]); 
+  const dispatch = useDispatch();
+
+  const visitors = useSelector((state) => state.visitors.list);
+  const selectedVisitorId = useSelector((state) => state.visitors.selectedId);
 
   const handleTabClick = (tab) => setActiveTab(tab);
 
   const handleVisitorClick = (visitor) => {
-    setSelectedVisitor(visitor.id);
+    dispatch(selectVisitor(visitor.id));
     if (onSelectVisitor) onSelectVisitor(visitor);
   };
 
   useEffect(() => {
-    // Listen for new visitors from backend
     socket.on("new_visitor", (visitor) => {
-      setVisitors((prev) => [...prev, visitor]);
+      dispatch(addVisitor(visitor));
     });
 
-    return () => {
-      socket.off("new_visitor");
-    };
-  }, []);
+    return () => socket.off("new_visitor");
+  }, [dispatch]);
 
   return (
     <div className="sidebar">
@@ -52,7 +54,9 @@ export default function Sidebar({ onSelectVisitor }) {
             {visitors.map((visitor) => (
               <li
                 key={visitor.id}
-                className={`sidebar-list-item ${selectedVisitor === visitor.id ? "selected" : ""}`}
+                className={`sidebar-list-item ${
+                  selectedVisitorId === visitor.id ? "selected" : ""
+                }`}
                 onClick={() => handleVisitorClick(visitor)}
               >
                 {visitor.name}
