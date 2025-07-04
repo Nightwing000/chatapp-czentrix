@@ -15,7 +15,7 @@ export default function ChatWindow({ visitor }) {
     (state) => state.chats.messagesByVisitor[visitorId] || []
   );
 
-  // ✅ Receive visitor messages
+  //  Receive visitor messages
   useEffect(() => {
     const handleVisitorMessage = (data) => {
       dispatch(addMessage({ visitorId: data.visitorId, message: data }));
@@ -25,12 +25,12 @@ export default function ChatWindow({ visitor }) {
     return () => socket.off("visitor message", handleVisitorMessage);
   }, [dispatch]);
 
-  // ✅ Auto-scroll to bottom
+  //  Auto-scroll to bottom
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ✅ Send agent message
+  //  Send agent message
   const handleSend = () => {
     if (!input.trim() || !visitorId) return;
 
