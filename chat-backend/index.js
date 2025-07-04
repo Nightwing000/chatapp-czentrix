@@ -18,9 +18,7 @@ app.get("/", (req, res) => res.send("Server is running"));
 
 const PORT = process.env.PORT || 3000;
 
-// ------------------------------
-// ✅ Handle Client Connection
-// ------------------------------
+
 io.on('connection', (socket) => {
   console.log('✅ Frontend connected:', socket.id);
 
@@ -39,9 +37,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// ------------------------------
-// 🔁 Visitor Simulation Logic
-// ------------------------------
+
 
 const fakeVisitors = [
   { id: 1, name: "Alice Smith" },
@@ -54,7 +50,7 @@ const fakeVisitors = [
 let visitorIndex = 0;
 const activeVisitors = [];
 
-// Emit one visitor every 10 seconds (looping)
+// Emit one visitor every 10 seconds 
 setInterval(() => {
   const visitor = fakeVisitors[visitorIndex % fakeVisitors.length];
   io.emit("new_visitor", visitor);
