@@ -36,6 +36,7 @@ export default function ChatWindow({ visitor }) {
   }, [messages]);
 
   //  Send agent message
+  //  Send agent message
   const handleSend = () => {
     if (!input.trim() || !visitorId) return;
 
