@@ -4,6 +4,7 @@ import socket from "../socket";
 
 import { useDispatch, useSelector } from "react-redux";
 import { addMessage } from "../store/chatSlice";
+import { markvisitorAsRead } from "../store/chatSlice";
 
 export default function ChatWindow({ visitor }) {
   const dispatch = useDispatch();
@@ -15,7 +16,7 @@ export default function ChatWindow({ visitor }) {
     (state) => state.chats.messagesByVisitor[visitorId] || []
   );
 
-  // ✅ Receive visitor messages
+ 
   useEffect(() => {
     const handleVisitorMessage = (data) => {
       dispatch(addMessage({ visitorId: data.visitorId, message: data }));
@@ -25,12 +26,16 @@ export default function ChatWindow({ visitor }) {
     return () => socket.off("visitor message", handleVisitorMessage);
   }, [dispatch]);
 
-  // ✅ Auto-scroll to bottom
+ useEffect(() => {
+  if (visitor?.id) {
+    dispatch(markvisitorAsRead({ visitorId: visitor.id }));
+  }
+}, [visitor?.id, dispatch]);
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ✅ Send agent message
+  //  Send agent message
   const handleSend = () => {
     if (!input.trim() || !visitorId) return;
 
@@ -78,3 +83,4 @@ export default function ChatWindow({ visitor }) {
     </div>
   );
 }
+

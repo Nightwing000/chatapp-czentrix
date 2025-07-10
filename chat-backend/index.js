@@ -1,47 +1,39 @@
 const express = require('express');
 const http = require('http');
-const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
 
-// Allow frontend from http://localhost:3001
-const io = new Server(server, {
-  cors: {
-    origin: 'http://localhost:3001',
-    methods: ['GET', 'POST'],
-    credentials: true,
-  },
-});
-
-app.get("/", (req, res) => res.send("Server is running"));
-
 const PORT = process.env.PORT || 3000;
 
-// ------------------------------
-// ✅ Handle Client Connection
-// ------------------------------
-io.on('connection', (socket) => {
-  console.log('✅ Frontend connected:', socket.id);
+const { Server } = require("socket.io");
 
-  socket.on('agent_message', (data) => {
-    console.log("📩 Agent says:", data.text);
-
-    io.emit("visitor message", {
-      text: data.text,
-      time: new Date().toLocaleTimeString(),
-      from: "visitor",
-    });
-  });
-
-  socket.on('disconnect', () => {
-    console.log('❌ Disconnected:', socket.id);
-  });
+const io = new Server(server, {
+  cors:{
+    origin: "http://localhost:3001",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
 });
 
-// ------------------------------
-// 🔁 Visitor Simulation Logic
-// ------------------------------
+app.get("/", (req,res)=> {
+  res.send("Server is running")
+})
+
+io.on('connection', (socket)=> {
+  console.log('Frontend Connected', socket.id);
+  socket.on('agent_message', (data)=> {
+  console.log('Agent says', data.text);
+  io.emit("visitor message", {
+    text: data.text,
+    time: new Date().toLocaleTimeString(),
+    from: "visitor",
+  });
+  });
+  socket.on('disconnect',()=>{
+  console.log('Disconnected', socket.id);
+  });
+});
 
 const fakeVisitors = [
   { id: 1, name: "Alice Smith" },
@@ -54,16 +46,20 @@ const fakeVisitors = [
 let visitorIndex = 0;
 const activeVisitors = [];
 
-// Emit one visitor every 10 seconds (looping)
-setInterval(() => {
-  const visitor = fakeVisitors[visitorIndex % fakeVisitors.length];
+let visitorInterval = setInterval(() => {
+  if (visitorIndex < fakeVisitors.length) {
+  const visitor = fakeVisitors[visitorIndex];
   io.emit("new_visitor", visitor);
-  console.log("🚶 New visitor:", visitor.name);
+  console.log(`🚶 New visitor: ${visitor.name}`);
   activeVisitors.push(visitor);
   visitorIndex++;
+  } else {
+  clearInterval(visitorInterval); 
+  }
 }, 10000);
 
-// Emit a random visitor message every 3 seconds
+
+// Emit random visitor message every 3 seconds
 const visitorReplies = [
   "Hello there!",
   "Just checking the site.",
@@ -75,19 +71,18 @@ const visitorReplies = [
 
 setInterval(() => {
   if (activeVisitors.length > 0) {
-    const randomVisitor = activeVisitors[Math.floor(Math.random() * activeVisitors.length)];
-    const text = visitorReplies[Math.floor(Math.random() * visitorReplies.length)];
-    io.emit("visitor message", {
-      text,
-      time: new Date().toLocaleTimeString(),
-      from: "visitor",
-      visitorId: randomVisitor.id,
-    });
-    console.log(`💬 ${randomVisitor.name}: ${text}`);
+  const randomVisitor = activeVisitors[Math.floor(Math.random() * activeVisitors.length)];
+  const text = visitorReplies[Math.floor(Math.random() * visitorReplies.length)];
+  io.emit("visitor message", {
+    text,
+    time: new Date().toLocaleTimeString(),
+    from: "visitor",
+    visitorId: randomVisitor.id,
+  });
+  console.log(`💬 ${randomVisitor.name}: ${text}`);
   }
 }, 3000);
 
-// ------------------------------
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

@@ -16,6 +16,7 @@ export default function Sidebar({ onSelectVisitor }) {
 
   const visitors = useSelector((state) => state.visitors.list);
   const selectedVisitorId = useSelector((state) => state.visitors.selectedId);
+  const metadata = useSelector((state) => state.chats.visitorMetadata);
 
   const handleTabClick = (tab) => setActiveTab(tab);
 
@@ -59,7 +60,19 @@ export default function Sidebar({ onSelectVisitor }) {
                 }`}
                 onClick={() => handleVisitorClick(visitor)}
               >
-                {visitor.name}
+                <div className="visitor-entry">
+                  <div className="visitor-name">
+                    {visitor.name}
+                    {metadata[visitor.id]?.unreadCount > 0 && (
+                      <span className="unread-badge">
+                        {metadata[visitor.id].unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  <div className="last-message">
+                    {metadata[visitor.id]?.lastMessageSnippet || "No messages yet"}
+                  </div>
+                </div>
               </li>
             ))}
           </ul>
