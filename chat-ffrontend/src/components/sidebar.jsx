@@ -52,7 +52,13 @@ export default function Sidebar({ onSelectVisitor }) {
       <div className="sidebar-content">
         {activeTab === "visitors" ? (
           <ul className="sidebar-list">
-            {visitors.map((visitor) => (
+            {[...visitors]
+                .sort((a,b)=> {
+                  const timeA = metadata[a.id]?.lastMessageTime || 0;
+                  const timeB = metadata[b.id]?.lastMessageTime || 0
+                  return timeB - timeA;
+                })
+                .map((visitor)=> (
               <li
                 key={visitor.id}
                 className={`sidebar-list-item ${
@@ -89,3 +95,4 @@ export default function Sidebar({ onSelectVisitor }) {
     </div>
   );
 }
+ 
