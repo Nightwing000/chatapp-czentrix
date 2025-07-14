@@ -8,15 +8,19 @@ const chatsSlice = createSlice({
   },
   reducers: {
     addMessage(state, action) {
-      const { visitorId, message } = action.payload;
+      const { visitorId, message, selectedId } = action.payload;
       if (!state.messagesByVisitor[visitorId]) {
         state.messagesByVisitor[visitorId] = [];
       }
+      const previousCount = state.visitorMetadata[visitorId]?.unreadCount || 0;
+
       state.messagesByVisitor[visitorId].push(message);
       state.visitorMetadata[visitorId] = {
           ...(state.visitorMetadata[visitorId] || {}),
       lastMessageTime: message.timestamp || Date.now(),
-      unreadCount: (state.visitorMetadata[visitorId]?.unreadCount || 0) + 1,
+
+      unreadCount: (visitorId === selectedId) ? 0 : previousCount + 1,
+
       lastMessageSnippet: message.text || "",
 
 

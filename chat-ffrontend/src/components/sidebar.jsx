@@ -60,7 +60,7 @@ export default function Sidebar({ onSelectVisitor }) {
                 })
                 .map((visitor)=> (
               <li
-                key={visitor.id}
+                key={visitor.id} 
                 className={`sidebar-list-item ${
                   selectedVisitorId === visitor.id ? "selected" : ""
                 }`}

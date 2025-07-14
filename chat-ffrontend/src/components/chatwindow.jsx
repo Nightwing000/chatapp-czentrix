@@ -16,15 +16,16 @@ export default function ChatWindow({ visitor }) {
     (state) => state.chats.messagesByVisitor[visitorId] || []
   );
 
- 
+  const selectedId = useSelector((state) => state.visitors.selectedId);
+
   useEffect(() => {
     const handleVisitorMessage = (data) => {
-      dispatch(addMessage({ visitorId: data.visitorId, message: data }));
+      dispatch(addMessage({ visitorId: data.visitorId, message: data, selectedId}));
     };
 
     socket.on("visitor message", handleVisitorMessage);
     return () => socket.off("visitor message", handleVisitorMessage);
-  }, [dispatch]);
+  }, [dispatch, selectedId]);
 
  useEffect(() => {
   if (visitor?.id) {
@@ -35,7 +36,7 @@ export default function ChatWindow({ visitor }) {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  //  Send agent message
+  
   //  Send agent message
   const handleSend = () => {
     if (!input.trim() || !visitorId) return;
