@@ -102,3 +102,21 @@
 .chat-input button:hover {
   background-color: #005dc1;
 }
+.chat-image {
+  max-width: 200px;
+  border-radius: 8px;
+  margin-top: 5px;
+}
+
+.chat-video {
+  max-width: 200px;
+  border-radius: 8px;
+  margin-top: 5px;
+}
+
+.chat-bubble a {
+  color: #0366d6;
+  text-decoration: underline;
+  margin-top: 5px;
+  display: block;
+}

@@ -10,6 +10,7 @@ export default function ChatWindow({ visitor }) {
   const dispatch = useDispatch();
   const messageEndRef = useRef(null);
   const [input, setInput] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const visitorId = visitor?.id;
   const messages = useSelector(
@@ -39,19 +40,22 @@ export default function ChatWindow({ visitor }) {
   
   //  Send agent message
   const handleSend = () => {
-    if (!input.trim() || !visitorId) return;
+  if (!input.trim() && !selectedFile) return;
 
-    const msg = {
-      text: input,
-      from: "agent",
-      time: new Date().toLocaleTimeString(),
-      visitorId,
-    };
-
-    socket.emit("agent_message", msg);
-    dispatch(addMessage({ visitorId, message: msg }));
-    setInput("");
+  const msg = {
+    text: input,
+    from: "agent",
+    time: new Date().toLocaleTimeString(),
+    visitorId,
+    attachments: selectedFile ? [selectedFile] : [],
   };
+
+  socket.emit("agent_message", msg);
+  dispatch(addMessage({ visitorId, message: msg }));
+  setInput("");
+  setSelectedFile(null);
+};
+
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") handleSend();
@@ -67,6 +71,24 @@ export default function ChatWindow({ visitor }) {
         {messages.map((msg, i) => (
           <div key={i} className={`chat-bubble ${msg.from}`}>
             {msg.text}
+            {msg.attachments?.map((att, j) => {
+  if (att.type === "image") {
+    return <img key={j} src={att.url} alt={att.name} className="chat-image" />;
+  } else if (att.type === "video") {
+    return (
+      <video key={j} controls className="chat-video">
+        <source src={att.url} />
+      </video>
+    );
+  } else {
+    return (
+      <a key={j} href={att.url} download target="_blank" rel="noreferrer">
+        📎 {att.name}
+      </a>
+    );
+  }
+})}
+
             <span className="time">{msg.time}</span>
           </div>
         ))}
@@ -80,6 +102,21 @@ export default function ChatWindow({ visitor }) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
         />
+        <input
+  type="file"
+  onChange={(e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const type = file.type.startsWith("image/")
+      ? "image"
+      : file.type.startsWith("video/")
+      ? "video"
+      : "file";
+    setSelectedFile({ url, type, name: file.name });
+  }}
+/>
+
         <button onClick={handleSend}>Send</button>
       </div>
     </div>
