@@ -24,6 +24,12 @@ app.get("/", (req, res) => {
 
 io.on('connection', (socket) => {
   console.log('Frontend Connected', socket.id);
+
+  // Send existing visitors
+  activeVisitors.forEach(visitor => {
+    socket.emit("new_visitor", visitor);
+  });
+
   socket.on('agent_message', (data) => {
     console.log('Agent says', data.text);
     io.emit("visitor message", {
@@ -32,6 +38,7 @@ io.on('connection', (socket) => {
       from: "visitor",
     });
   });
+
   socket.on('disconnect', () => {
     console.log('Disconnected', socket.id);
   });
