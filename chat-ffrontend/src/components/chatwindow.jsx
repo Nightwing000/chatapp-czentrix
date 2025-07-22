@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./chatwindow.css";
 import socket from "../socket";
-
+import DOMPurify from "dompurify";
 import { useDispatch, useSelector } from "react-redux";
 import { addMessage } from "../store/chatSlice";
 import { markvisitorAsRead } from "../store/chatSlice";
@@ -70,25 +70,30 @@ export default function ChatWindow({ visitor }) {
       <div className="chat-messages">
         {messages.map((msg, i) => (
           <div key={i} className={`chat-bubble ${msg.from}`}>
-            {msg.text}
+            {/* Render HTML tables and other HTML safely */}
+            <div
+              className="chat-message-content"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(msg.text),
+              }}
+            />
             {msg.attachments?.map((att, j) => {
-  if (att.type === "image") {
-    return <img key={j} src={att.url} alt={att.name} className="chat-image" />;
-  } else if (att.type === "video") {
-    return (
-      <video key={j} controls className="chat-video">
-        <source src={att.url} />
-      </video>
-    );
-  } else {
-    return (
-      <a key={j} href={att.url} download target="_blank" rel="noreferrer">
-        📎 {att.name}
-      </a>
-    );
-  }
-})}
-
+              if (att.type === "image") {
+                return <img key={j} src={att.url} alt={att.name} className="chat-image" />;
+              } else if (att.type === "video") {
+                return (
+                  <video key={j} controls className="chat-video">
+                    <source src={att.url} />
+                  </video>
+                );
+              } else {
+                return (
+                  <a key={j} href={att.url} download target="_blank" rel="noreferrer">
+                    📎 {att.name}
+                  </a>
+                );
+              }
+            })}
             <span className="time">{msg.time}</span>
           </div>
         ))}
