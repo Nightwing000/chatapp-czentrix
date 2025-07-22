@@ -4,34 +4,36 @@ const http = require('http');
 const app = express();
 const server = http.createServer(app);
 
+// Read FRONTEND_URL from .env or default to http://localhost:3001
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3001";
 const PORT = process.env.PORT || 3000;
 
 const { Server } = require("socket.io");
 
 const io = new Server(server, {
-  cors:{
-    origin: "http://localhost:3001",
+  cors: {
+    origin: FRONTEND_URL,
     methods: ["GET", "POST"],
     credentials: true
   }
 });
 
-app.get("/", (req,res)=> {
+app.get("/", (req, res) => {
   res.send("Server is running")
 })
 
-io.on('connection', (socket)=> {
+io.on('connection', (socket) => {
   console.log('Frontend Connected', socket.id);
-  socket.on('agent_message', (data)=> {
-  console.log('Agent says', data.text);
-  io.emit("visitor message", {
-    text: data.text,
-    time: new Date().toLocaleTimeString(),
-    from: "visitor",
+  socket.on('agent_message', (data) => {
+    console.log('Agent says', data.text);
+    io.emit("visitor message", {
+      text: data.text,
+      time: new Date().toLocaleTimeString(),
+      from: "visitor",
+    });
   });
-  });
-  socket.on('disconnect',()=>{
-  console.log('Disconnected', socket.id);
+  socket.on('disconnect', () => {
+    console.log('Disconnected', socket.id);
   });
 });
 
