@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "./sidebar.css";
-import socket from "../socket";
 
 import { useDispatch, useSelector } from "react-redux";
-import { addVisitor, selectVisitor } from "../store/visitorslice";
+import { selectVisitor } from "../store/visitorslice";
 
 const team = [
   { id: 1, name: "Team Alpha" },
@@ -25,13 +24,7 @@ export default function Sidebar({ onSelectVisitor }) {
     if (onSelectVisitor) onSelectVisitor(visitor);
   };
 
-  useEffect(() => {
-    socket.on("new_visitor", (visitor) => {
-      dispatch(addVisitor(visitor));
-    });
-
-    return () => socket.off("new_visitor");
-  }, [dispatch]);
+  
 
   return (
     <div className="sidebar">

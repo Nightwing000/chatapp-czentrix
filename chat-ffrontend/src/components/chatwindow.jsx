@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./chatwindow.css";
-import socket from "../socket";
 import DOMPurify from "dompurify";
 import { useDispatch, useSelector } from "react-redux";
-import { addMessage } from "../store/chatSlice";
-import { markvisitorAsRead } from "../store/chatSlice";
+import { addMessage, markvisitorAsRead } from "../store/chatSlice";
+import { useSocket } from "../contexts/SocketContext";
 
 export default function ChatWindow({ visitor }) {
   const dispatch = useDispatch();
+  const { socket } = useSocket();
   const messageEndRef = useRef(null);
   const [input, setInput] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -17,44 +17,34 @@ export default function ChatWindow({ visitor }) {
     (state) => state.chats.messagesByVisitor[visitorId] || []
   );
 
-  const selectedId = useSelector((state) => state.visitors.selectedId);
-
+  // Remove socket listeners from here - they're now centralized
   useEffect(() => {
-    const handleVisitorMessage = (data) => {
-      dispatch(addMessage({ visitorId: data.visitorId, message: data, selectedId}));
-    };
+    if (visitor?.id) {
+      dispatch(markvisitorAsRead({ visitorId: visitor.id }));
+    }
+  }, [visitor?.id, dispatch]);
 
-    socket.on("visitor message", handleVisitorMessage);
-    return () => socket.off("visitor message", handleVisitorMessage);
-  }, [dispatch, selectedId]);
-
- useEffect(() => {
-  if (visitor?.id) {
-    dispatch(markvisitorAsRead({ visitorId: visitor.id }));
-  }
-}, [visitor?.id, dispatch]);
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  
-  //  Send agent message
+  // Send agent message
   const handleSend = () => {
-  if (!input.trim() && !selectedFile) return;
+    if (!input.trim() && !selectedFile) return;
 
-  const msg = {
-    text: input,
-    from: "agent",
-    time: new Date().toLocaleTimeString(),
-    visitorId,
-    attachments: selectedFile ? [selectedFile] : [],
+    const msg = {
+      text: input,
+      from: "agent",
+      time: new Date().toLocaleTimeString(),
+      visitorId,
+      attachments: selectedFile ? [selectedFile] : [],
+    };
+
+    
+    socket.emit("agent_message", msg);
+    setInput("");
+    setSelectedFile(null);
   };
-
-  socket.emit("agent_message", msg);
-  dispatch(addMessage({ visitorId, message: msg }));
-  setInput("");
-  setSelectedFile(null);
-};
 
 
   const handleKeyDown = (e) => {

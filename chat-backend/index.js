@@ -32,10 +32,13 @@ io.on('connection', (socket) => {
 
   socket.on('agent_message', (data) => {
     console.log('Agent says', data.text);
-    io.emit("visitor message", {
+    
+    io.emit("agent_message", {
       text: data.text,
-      time: new Date().toLocaleTimeString(),
-      from: "visitor",
+      time: data.time,
+      from: "agent",
+      visitorId: data.visitorId,
+      attachments: data.attachments || []
     });
   });
 
@@ -93,5 +96,5 @@ setInterval(() => {
 }, 3000);
 
 server.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(` Server running on http://localhost:${PORT}`);
 });
